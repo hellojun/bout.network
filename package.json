@@ -1,0 +1,20 @@
+{
+  "name": "bout-network",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "dev:api": "pnpm --filter @bout/api dev",
+    "dev:judge": "pnpm --filter @bout/judge dev",
+    "dev:web": "pnpm --filter @bout/web dev",
+    "db:generate": "pnpm --filter @bout/db generate",
+    "db:migrate": "pnpm --filter @bout/db migrate",
+    "db:push": "pnpm --filter @bout/db push"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.0"
+  }
+}

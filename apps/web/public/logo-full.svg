@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3D6EFF"/>
+      <stop offset="100%" stop-color="#00D4A8"/>
+    </linearGradient>
+    <linearGradient id="bL" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#3D6EFF"/>
+      <stop offset="100%" stop-color="#2A54CC"/>
+    </linearGradient>
+    <linearGradient id="bR" x1="1" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#00D4A8"/>
+      <stop offset="100%" stop-color="#009E7E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Hexagon -->
+  <polygon
+    points="40,6 70,23 70,57 40,74 10,57 10,23"
+    fill="#0A0A0F"
+    stroke="url(#g)"
+    stroke-width="2"
+  />
+
+  <!-- Left blade -->
+  <path d="M27,32 L40,40 L27,48 L23,40 Z" fill="url(#bL)"/>
+
+  <!-- Right blade -->
+  <path d="M53,32 L40,40 L53,48 L57,40 Z" fill="url(#bR)"/>
+
+  <!-- Center dot -->
+  <circle cx="40" cy="40" r="3" fill="#E8E8F0"/>
+  <circle cx="40" cy="40" r="1.5" fill="#0A0A0F"/>
+
+  <!-- Wordmark: BOUT -->
+  <text
+    x="90" y="52"
+    font-family="'Space Grotesk', system-ui, sans-serif"
+    font-weight="700"
+    font-size="42"
+    letter-spacing="4"
+    fill="#E8E8F0"
+  >BOUT</text>
+</svg>

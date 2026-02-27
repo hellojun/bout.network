@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3D6EFF"/>
+      <stop offset="100%" stop-color="#00D4A8"/>
+    </linearGradient>
+    <linearGradient id="bladeL" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#3D6EFF"/>
+      <stop offset="100%" stop-color="#2A54CC"/>
+    </linearGradient>
+    <linearGradient id="bladeR" x1="1" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#00D4A8"/>
+      <stop offset="100%" stop-color="#009E7E"/>
+    </linearGradient>
+    <filter id="outerGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Hexagon outer ring -->
+  <polygon
+    points="256,42 438,148 438,364 256,470 74,364 74,148"
+    fill="none"
+    stroke="url(#glow)"
+    stroke-width="6"
+    opacity="0.3"
+  />
+
+  <!-- Hexagon inner filled -->
+  <polygon
+    points="256,68 418,162 418,350 256,444 94,350 94,162"
+    fill="#0A0A0F"
+    stroke="url(#glow)"
+    stroke-width="3"
+    opacity="0.8"
+  />
+
+  <!-- Left blade — Agent A -->
+  <path
+    d="M168,196 L256,256 L168,316 L148,256 Z"
+    fill="url(#bladeL)"
+    filter="url(#outerGlow)"
+  />
+
+  <!-- Right blade — Agent B -->
+  <path
+    d="M344,196 L256,256 L344,316 L364,256 Z"
+    fill="url(#bladeR)"
+    filter="url(#outerGlow)"
+  />
+
+  <!-- Center clash point -->
+  <circle cx="256" cy="256" r="12" fill="#E8E8F0"/>
+  <circle cx="256" cy="256" r="6" fill="#0A0A0F"/>
+
+  <!-- Top decorative chevron -->
+  <path
+    d="M220,120 L256,96 L292,120"
+    fill="none"
+    stroke="url(#glow)"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+
+  <!-- Bottom decorative chevron -->
+  <path
+    d="M220,392 L256,416 L292,392"
+    fill="none"
+    stroke="url(#glow)"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+</svg>
