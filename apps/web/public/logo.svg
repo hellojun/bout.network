@@ -1,77 +1,72 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#3D6EFF"/>
-      <stop offset="100%" stop-color="#00D4A8"/>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5B8AFF"/>
+      <stop offset="100%" stop-color="#3DDBC4"/>
     </linearGradient>
-    <linearGradient id="bladeL" x1="0" y1="0" x2="0.5" y2="1">
-      <stop offset="0%" stop-color="#3D6EFF"/>
-      <stop offset="100%" stop-color="#2A54CC"/>
-    </linearGradient>
-    <linearGradient id="bladeR" x1="1" y1="0" x2="0.5" y2="1">
-      <stop offset="0%" stop-color="#00D4A8"/>
-      <stop offset="100%" stop-color="#009E7E"/>
-    </linearGradient>
-    <filter id="outerGlow">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
   </defs>
 
-  <!-- Hexagon outer ring -->
+  <!-- Outer hexagon ring — light stroke -->
   <polygon
-    points="256,42 438,148 438,364 256,470 74,364 74,148"
+    points="256,52 432,154 432,358 256,460 80,358 80,154"
     fill="none"
-    stroke="url(#glow)"
-    stroke-width="6"
-    opacity="0.3"
+    stroke="#E8E8F0"
+    stroke-width="4"
+    opacity="0.15"
   />
 
-  <!-- Hexagon inner filled -->
+  <!-- Main hexagon — light filled with subtle transparency -->
   <polygon
-    points="256,68 418,162 418,350 256,444 94,350 94,162"
-    fill="#0A0A0F"
-    stroke="url(#glow)"
-    stroke-width="3"
-    opacity="0.8"
-  />
-
-  <!-- Left blade — Agent A -->
-  <path
-    d="M168,196 L256,256 L168,316 L148,256 Z"
-    fill="url(#bladeL)"
-    filter="url(#outerGlow)"
-  />
-
-  <!-- Right blade — Agent B -->
-  <path
-    d="M344,196 L256,256 L344,316 L364,256 Z"
-    fill="url(#bladeR)"
-    filter="url(#outerGlow)"
-  />
-
-  <!-- Center clash point -->
-  <circle cx="256" cy="256" r="12" fill="#E8E8F0"/>
-  <circle cx="256" cy="256" r="6" fill="#0A0A0F"/>
-
-  <!-- Top decorative chevron -->
-  <path
-    d="M220,120 L256,96 L292,120"
+    points="256,78 412,168 412,344 256,434 100,344 100,168"
     fill="none"
-    stroke="url(#glow)"
-    stroke-width="3"
-    stroke-linecap="round"
+    stroke="#E8E8F0"
+    stroke-width="2.5"
+    opacity="0.35"
   />
 
-  <!-- Bottom decorative chevron -->
-  <path
-    d="M220,392 L256,416 L292,392"
-    fill="none"
-    stroke="url(#glow)"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
+  <!-- Left AI agent node -->
+  <circle cx="172" cy="256" r="38" fill="none" stroke="#E8E8F0" stroke-width="2.5"/>
+  <circle cx="172" cy="256" r="16" fill="#E8E8F0"/>
+  <!-- Left circuit lines -->
+  <line x1="134" y1="256" x2="108" y2="256" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <line x1="172" y1="218" x2="172" y2="192" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <line x1="172" y1="294" x2="172" y2="320" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <!-- Left small dots -->
+  <circle cx="108" cy="256" r="3" fill="#E8E8F0" opacity="0.5"/>
+  <circle cx="172" cy="192" r="3" fill="#E8E8F0" opacity="0.5"/>
+  <circle cx="172" cy="320" r="3" fill="#E8E8F0" opacity="0.5"/>
+
+  <!-- Right AI agent node -->
+  <circle cx="340" cy="256" r="38" fill="none" stroke="#E8E8F0" stroke-width="2.5"/>
+  <circle cx="340" cy="256" r="16" fill="#E8E8F0"/>
+  <!-- Right circuit lines -->
+  <line x1="378" y1="256" x2="404" y2="256" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <line x1="340" y1="218" x2="340" y2="192" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <line x1="340" y1="294" x2="340" y2="320" stroke="#E8E8F0" stroke-width="2" opacity="0.5"/>
+  <!-- Right small dots -->
+  <circle cx="404" cy="256" r="3" fill="#E8E8F0" opacity="0.5"/>
+  <circle cx="340" cy="192" r="3" fill="#E8E8F0" opacity="0.5"/>
+  <circle cx="340" cy="320" r="3" fill="#E8E8F0" opacity="0.5"/>
+
+  <!-- Center clash — crossing blades / game swords -->
+  <!-- Blade 1: top-left to bottom-right -->
+  <line x1="228" y1="228" x2="284" y2="284" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Blade 2: bottom-left to top-right -->
+  <line x1="228" y1="284" x2="284" y2="228" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Center diamond -->
+  <polygon points="256,238 268,256 256,274 244,256" fill="url(#accentGrad)"/>
+
+  <!-- Connection lines from agents to center -->
+  <line x1="210" y1="256" x2="238" y2="256" stroke="#E8E8F0" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+  <line x1="274" y1="256" x2="302" y2="256" stroke="#E8E8F0" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+
+  <!-- Top decorative — pixel game cross -->
+  <rect x="251" y="100" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.3"/>
+  <rect x="241" y="110" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.2"/>
+  <rect x="261" y="110" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.2"/>
+
+  <!-- Bottom decorative — pixel game cross -->
+  <rect x="251" y="400" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.3"/>
+  <rect x="241" y="390" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.2"/>
+  <rect x="261" y="390" width="10" height="10" rx="1" fill="#E8E8F0" opacity="0.2"/>
 </svg>

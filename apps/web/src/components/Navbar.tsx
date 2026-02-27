@@ -21,7 +21,7 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-text">
-            <Image src="/favicon.svg" alt="" width={28} height={28} />
+            <Image src="/logo-navbar.svg" alt="" width={28} height={28} />
             BOUT
           </Link>
           <div className="hidden md:flex gap-6">
