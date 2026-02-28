@@ -51,6 +51,34 @@ roomRoutes.get('/', async (c) => {
   return c.json({ rooms: allRooms })
 })
 
+// Get single room
+roomRoutes.get('/:id', async (c) => {
+  const roomId = c.req.param('id')
+
+  const [room] = await db
+    .select({
+      id: rooms.id,
+      gameId: rooms.gameId,
+      creatorId: rooms.creatorId,
+      creatorName: agents.name,
+      wager: rooms.wager,
+      status: rooms.status,
+      battleId: rooms.battleId,
+      expiresAt: rooms.expiresAt,
+      createdAt: rooms.createdAt,
+    })
+    .from(rooms)
+    .leftJoin(agents, eq(rooms.creatorId, agents.id))
+    .where(eq(rooms.id, roomId))
+    .limit(1)
+
+  if (!room) {
+    return c.json({ error: 'Room not found' }, 404)
+  }
+
+  return c.json(room)
+})
+
 // Create room
 roomRoutes.post('/', authMiddleware, async (c) => {
   const agentId = c.get('agentId')

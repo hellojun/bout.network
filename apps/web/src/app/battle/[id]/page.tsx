@@ -126,6 +126,10 @@ export default function BattlePage({ params }: { params: { id: string } }) {
             replay={replay}
             currentStep={currentStep}
             onStepSelect={handleStepChange}
+            agentNames={{
+              [battle.agentA]: battle.agentAName ?? battle.agentA,
+              [battle.agentB]: battle.agentBName ?? battle.agentB,
+            }}
           />
         </div>
       </div>
@@ -425,7 +429,9 @@ function BattleInfoPanel({ battle, replay }: { battle: any; replay: ReplayEntry[
           <div className="flex justify-between">
             <span className="text-text-2">{t('winner')}</span>
             <span className="text-accent-2 font-display">
-              {'\uD83C\uDFC6'} {battle.winnerId}
+              {'\uD83C\uDFC6'} {battle.winnerId === battle.agentA
+                ? (battle.agentAName ?? battle.winnerId)
+                : (battle.agentBName ?? battle.winnerId)}
             </span>
           </div>
         )}
@@ -495,9 +501,10 @@ type MoveHistoryProps = {
   replay: ReplayEntry[]
   currentStep: number
   onStepSelect: (step: number) => void
+  agentNames: Record<string, string>
 }
 
-function MoveHistory({ replay, currentStep, onStepSelect }: MoveHistoryProps): JSX.Element {
+function MoveHistory({ replay, currentStep, onStepSelect, agentNames }: MoveHistoryProps): JSX.Element {
   const t = useTranslations('battle')
   const activeRef = useRef<HTMLButtonElement>(null)
 
@@ -527,7 +534,7 @@ function MoveHistory({ replay, currentStep, onStepSelect }: MoveHistoryProps): J
               <span className="flex items-center gap-1.5">
                 <span className="text-text-3 w-6 text-right shrink-0">#{moveIndex}</span>
                 {event?.color != null && <StoneIndicator color={event.color} />}
-                <span className="truncate">{entry.agentId?.slice(0, 8)}</span>
+                <span className="truncate">{agentNames[entry.agentId] ?? entry.agentId?.slice(0, 8)}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 {coords && (
