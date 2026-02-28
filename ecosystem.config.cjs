@@ -43,7 +43,7 @@ module.exports = {
     {
       name: 'bout-web',
       cwd: './apps/web',
-      script: 'node_modules/.bin/next',
+      script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3001',
       env: {
         NODE_ENV: 'production',

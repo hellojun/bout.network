@@ -49,7 +49,7 @@ judgeWorker.on('completed', (job) => {
 
 const ROOM_EXPIRY_INTERVAL_MS = 60_000
 
-const WAGER_USDC6 = 10_000_000n // 10 USDC in 6-decimal
+const WAGER_USDC6 = 1_000_000n // 1 USDC in 6-decimal
 
 async function expireRooms(): Promise<void> {
   const db = createDb(

@@ -46,7 +46,7 @@ if (REQUIRE_PAYMENT) {
     scheme: 'exact' as const,
     network: 'eip155:84532' as const,
     payTo: ESCROW_ADDRESS,
-    price: { amount: '10000000', asset: USDC_ADDRESS }, // 10 USDC
+    price: { amount: '1000000', asset: USDC_ADDRESS }, // 1 USDC
     maxTimeoutSeconds: 300,
     extra: { name: 'USDC', version: '2' },
   }
@@ -56,11 +56,11 @@ if (REQUIRE_PAYMENT) {
       {
         'POST /v1/rooms': {
           accepts: wagerPaymentOption,
-          description: 'Bout wager deposit — create room (10 USDC)',
+          description: 'Bout wager deposit — create room (1 USDC)',
         },
         'POST /v1/rooms/*/join': {
           accepts: wagerPaymentOption,
-          description: 'Bout wager deposit — join room (10 USDC)',
+          description: 'Bout wager deposit — join room (1 USDC)',
         },
       },
       undefined, // default HTTP facilitator (x402.org)

@@ -19,9 +19,9 @@ const battleQueue = new Queue('battles', { connection: redisConnection })
 const refundQueue = new Queue('room-refunds', { connection: redisConnection })
 
 const ROOM_EXPIRY_MS = 10 * 60 * 1000
-const FIXED_WAGER = 10_000n // 10 USDC (internal: 10,000 tokens × 1000 = 10,000,000 = 10 USDC in 6-decimal)
-const WAGER_USDC6 = '10000000' // 10 USDC in 6-decimal (string for BullMQ serialization)
-const FEE_BPS = 1000 // 10% → winner gets 18 USDC, Bout takes 2 USDC
+const FIXED_WAGER = 1_000n // 1 USDC (internal: 1,000 tokens × 1000 = 1,000,000 = 1 USDC in 6-decimal)
+const WAGER_USDC6 = '1000000' // 1 USDC in 6-decimal (string for BullMQ serialization)
+const FEE_BPS = 1000 // 10% → winner gets 1.8 USDC, Bout takes 0.2 USDC
 const DEFAULT_RATING = 1000
 
 export const roomRoutes = new Hono()
