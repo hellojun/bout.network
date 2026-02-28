@@ -38,26 +38,55 @@ export function GomokuBoard({ board, lastMove, showCoordinates = false, size }: 
       height={size || TOTAL}
       className="select-none"
     >
-      {/* Board background */}
-      <rect width={TOTAL} height={TOTAL} fill="#4A4A52" rx="4" />
+      {/* Board background — wood texture */}
+      <defs>
+        <pattern id="wood-grain" patternUnits="userSpaceOnUse" width={TOTAL} height={TOTAL}>
+          <rect width={TOTAL} height={TOTAL} fill="#DCB468" />
+          {/* Horizontal wood grain lines */}
+          {Array.from({ length: 40 }).map((_, i) => {
+            const y = i * (TOTAL / 40) + (i % 3) * 2
+            const opacity = 0.06 + (i % 5) * 0.02
+            return (
+              <line
+                key={`grain-${i}`}
+                x1={0} y1={y} x2={TOTAL} y2={y + (i % 2 ? 3 : -2)}
+                stroke="#B8943E" strokeWidth={i % 7 === 0 ? 2.5 : 1} opacity={opacity}
+              />
+            )
+          })}
+          {/* Subtle knot accents */}
+          <ellipse cx={TOTAL * 0.2} cy={TOTAL * 0.35} rx={18} ry={6} fill="#C9A44A" opacity={0.15} />
+          <ellipse cx={TOTAL * 0.75} cy={TOTAL * 0.7} rx={22} ry={5} fill="#C9A44A" opacity={0.12} />
+        </pattern>
+      </defs>
+      <rect width={TOTAL} height={TOTAL} fill="url(#wood-grain)" rx="4" />
+      {/* Subtle varnish overlay */}
+      <rect width={TOTAL} height={TOTAL} fill="url(#varnish)" rx="4" opacity="0.3" />
 
       {/* Grid lines */}
       {Array.from({ length: BOARD_SIZE }).map((_, i) => (
         <g key={`line-${i}`}>
           <line
             x1={toX(0)} y1={toY(i)} x2={toX(14)} y2={toY(i)}
-            stroke="#636370" strokeWidth={1}
+            stroke="#5C4A28" strokeWidth={0.8}
           />
           <line
             x1={toX(i)} y1={toY(0)} x2={toX(i)} y2={toY(14)}
-            stroke="#636370" strokeWidth={1}
+            stroke="#5C4A28" strokeWidth={0.8}
           />
         </g>
       ))}
 
+      {/* Board edge (thicker border) */}
+      <rect
+        x={toX(0)} y={toY(0)}
+        width={toX(14) - toX(0)} height={toY(14) - toY(0)}
+        fill="none" stroke="#5C4A28" strokeWidth={1.5}
+      />
+
       {/* Star points */}
       {STAR_POINTS.map(([r, c]) => (
-        <circle key={`star-${r}-${c}`} cx={toX(c)} cy={toY(r)} r={4} fill="#73737F" />
+        <circle key={`star-${r}-${c}`} cx={toX(c)} cy={toY(r)} r={3.5} fill="#5C4A28" />
       ))}
 
       {/* Coordinates */}
@@ -67,14 +96,14 @@ export function GomokuBoard({ board, lastMove, showCoordinates = false, size }: 
             <g key={`coord-${i}`}>
               <text
                 x={toX(i)} y={MARGIN - 12}
-                textAnchor="middle" fill="#8A8A9A" fontSize={11}
+                textAnchor="middle" fill="#7A6535" fontSize={11}
                 fontFamily="JetBrains Mono"
               >
                 {String.fromCharCode(65 + i)}
               </text>
               <text
                 x={MARGIN - 14} y={toY(i) + 4}
-                textAnchor="middle" fill="#8A8A9A" fontSize={11}
+                textAnchor="middle" fill="#7A6535" fontSize={11}
                 fontFamily="JetBrains Mono"
               >
                 {i + 1}
@@ -90,7 +119,7 @@ export function GomokuBoard({ board, lastMove, showCoordinates = false, size }: 
           if (cell === 0) return null
           const isLast = lastMove?.row === r && lastMove?.col === c
           const gradientId = cell === 1 ? 'black-gradient' : 'white-gradient'
-          const strokeColor = cell === 1 ? '#000' : '#AAAAAA'
+          const strokeColor = cell === 1 ? '#111' : '#999'
 
           return (
             <g key={`stone-${r}-${c}`}>
@@ -117,13 +146,17 @@ export function GomokuBoard({ board, lastMove, showCoordinates = false, size }: 
 
       {/* Gradients */}
       <defs>
-        <radialGradient id="black-gradient">
-          <stop offset="0%" stopColor="#484848" />
-          <stop offset="100%" stopColor="#1A1A1A" />
+        <radialGradient id="black-gradient" cx="35%" cy="35%">
+          <stop offset="0%" stopColor="#555555" />
+          <stop offset="100%" stopColor="#111111" />
         </radialGradient>
-        <radialGradient id="white-gradient">
+        <radialGradient id="white-gradient" cx="35%" cy="35%">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#D0D0D0" />
+          <stop offset="100%" stopColor="#C8C8C8" />
+        </radialGradient>
+        <radialGradient id="varnish" cx="30%" cy="25%">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="transparent" />
         </radialGradient>
       </defs>
     </svg>
