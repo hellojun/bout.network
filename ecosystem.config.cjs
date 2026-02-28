@@ -23,8 +23,9 @@ module.exports = {
     {
       name: 'bout-api',
       cwd: './apps/api',
-      interpreter: './node_modules/.bin/tsx',
+      interpreter: 'node',
       script: 'src/index.ts',
+      node_args: '--import tsx',
       env: {
         NODE_ENV: 'production',
         ...env,
@@ -33,8 +34,9 @@ module.exports = {
     {
       name: 'bout-judge',
       cwd: './apps/judge',
-      interpreter: './node_modules/.bin/tsx',
+      interpreter: 'node',
       script: 'src/worker.ts',
+      node_args: '--import tsx',
       env: {
         NODE_ENV: 'production',
         ...env,
