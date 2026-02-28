@@ -23,8 +23,8 @@ module.exports = {
     {
       name: 'bout-api',
       cwd: './apps/api',
-      script: 'dist/index.js',
-      node_args: '--experimental-specifier-resolution=node',
+      interpreter: './node_modules/.bin/tsx',
+      script: 'src/index.ts',
       env: {
         NODE_ENV: 'production',
         ...env,
@@ -33,8 +33,8 @@ module.exports = {
     {
       name: 'bout-judge',
       cwd: './apps/judge',
-      script: 'dist/worker.js',
-      node_args: '--experimental-specifier-resolution=node',
+      interpreter: './node_modules/.bin/tsx',
+      script: 'src/worker.ts',
       env: {
         NODE_ENV: 'production',
         ...env,
