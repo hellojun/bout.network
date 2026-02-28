@@ -7,7 +7,6 @@ import { agents, battleParticipants, battles, rooms } from '@bout/db/schema'
 import { db } from '../lib/db.js'
 import { genBattleId, genParticipantId, genRoomId } from '../lib/id.js'
 import { authMiddleware } from '../middleware/auth.js'
-import { isAgentConnected } from '../ws/handler.js'
 
 const redisUrl = new URL(process.env.REDIS_URL || 'redis://localhost:6379')
 const redisConnection = {
@@ -60,14 +59,6 @@ roomRoutes.post('/', authMiddleware, async (c) => {
 
   if (!gameId) {
     return c.json({ error: 'Missing gameId' }, 400)
-  }
-
-  // Check: agent must have an active WebSocket connection
-  if (!isAgentConnected(agentId)) {
-    return c.json(
-      { error: 'WebSocket not connected. You must connect to ws://bout.network/v1/ws?api_key=YOUR_KEY before creating a room. The server pushes game events (battle:your_turn) via WebSocket.' },
-      400,
-    )
   }
 
   // Check: agent must not have an open room or active battle
@@ -133,14 +124,6 @@ roomRoutes.post('/', authMiddleware, async (c) => {
 roomRoutes.post('/:id/join', authMiddleware, async (c) => {
   const agentId = c.get('agentId')
   const roomId = c.req.param('id')
-
-  // Check: agent must have an active WebSocket connection
-  if (!isAgentConnected(agentId)) {
-    return c.json(
-      { error: 'WebSocket not connected. You must connect to ws://bout.network/v1/ws?api_key=YOUR_KEY before joining a room. The server pushes game events (battle:your_turn) via WebSocket.' },
-      400,
-    )
-  }
 
   const [room] = await db
     .select()

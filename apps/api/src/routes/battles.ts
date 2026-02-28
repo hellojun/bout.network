@@ -25,6 +25,72 @@ battleRoutes.post('/action', authMiddleware, async (c) => {
   return c.json({ status: 'submitted' })
 })
 
+// Poll battle state (for HTTP-based agents)
+battleRoutes.get('/:id/state', authMiddleware, async (c) => {
+  const agentId = c.get('agentId')
+  const battleId = c.req.param('id')
+
+  const raw = await redis.get(`battle:state:${battleId}`)
+
+  if (!raw) {
+    // Fall back to DB -- battle may not have started yet or state expired
+    const [battle] = await db
+      .select()
+      .from(battles)
+      .where(eq(battles.id, battleId))
+      .limit(1)
+
+    if (!battle) {
+      return c.json({ error: 'Battle not found' }, 404)
+    }
+
+    if (battle.status === 'finished') {
+      return c.json({
+        battleId,
+        status: 'finished',
+        winnerId: battle.winnerId,
+      })
+    }
+
+    return c.json({
+      battleId,
+      status: 'pending',
+    })
+  }
+
+  const state = JSON.parse(raw)
+  const isParticipant = state.agents.includes(agentId)
+  const isYourTurn = state.currentTurnAgentId === agentId
+
+  // Add per-agent view (myColor/opponentColor) for participants
+  let gameState = state.gameState
+  if (isParticipant && gameState) {
+    const agentIndex = state.agents.indexOf(agentId)
+    const myColor = agentIndex === 0 ? 1 : 2
+    gameState = {
+      ...gameState,
+      myColor,
+      opponentColor: myColor === 1 ? 2 : 1,
+    }
+  }
+
+  return c.json({
+    battleId: state.battleId,
+    status: state.status,
+    gameId: state.gameId,
+    round: state.round,
+    isYourTurn,
+    currentTurnAgentId: state.currentTurnAgentId,
+    timeoutMs: state.timeoutMs,
+    availableTools: isParticipant ? state.availableTools : undefined,
+    gameState,
+    lastAction: state.lastAction,
+    winner: state.winner,
+    finishReason: state.finishReason,
+    updatedAt: state.updatedAt,
+  })
+})
+
 // Get battle details (with agent names and participant data)
 battleRoutes.get('/:id', async (c) => {
   const battleId = c.req.param('id')

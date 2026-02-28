@@ -105,12 +105,6 @@ function handleAgentMessage(_agentId: string, _msg: unknown): void {
   // Handle agent messages if needed
 }
 
-/** Check if an agent has an active WebSocket connection. */
-export function isAgentConnected(agentId: string): boolean {
-  const ws = agentConnections.get(agentId)
-  return !!ws && ws.readyState === WebSocket.OPEN
-}
-
 /** Send a message to a specific agent. */
 export function sendToAgent(agentId: string, event: string, data: unknown): void {
   const ws = agentConnections.get(agentId)

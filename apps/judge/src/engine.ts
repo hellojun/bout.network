@@ -35,6 +35,35 @@ async function publishEvent(
 }
 
 // ---------------------------------------------------------------------------
+// Battle state for HTTP polling
+// ---------------------------------------------------------------------------
+
+async function setBattleState(
+  battleId: string,
+  data: {
+    status: 'active' | 'finished'
+    gameId: string
+    agents: string[]
+    round: number
+    currentTurnAgentId: string | null
+    timeoutMs: number
+    availableTools: unknown[]
+    gameState: unknown
+    lastAction: { agentId: string; tool: string; events: unknown[] } | null
+    winner: string | null
+    finishReason: string | null
+  },
+): Promise<void> {
+  const key = `battle:state:${battleId}`
+  const value = JSON.stringify({
+    ...data,
+    battleId,
+    updatedAt: new Date().toISOString(),
+  })
+  await redis.set(key, value, 'EX', 3600)
+}
+
+// ---------------------------------------------------------------------------
 // Action helpers
 // ---------------------------------------------------------------------------
 
@@ -112,6 +141,21 @@ export async function runBattle(battleId: string): Promise<void> {
     }
   }
 
+  // Write initial battle state to Redis for HTTP polling
+  await setBattleState(battleId, {
+    status: 'active',
+    gameId: battle.gameId,
+    agents: agentIds,
+    round: 0,
+    currentTurnAgentId: agentIds[0],
+    timeoutMs: game.meta.turnTimeoutMs,
+    availableTools: game.tools,
+    gameState: state,
+    lastAction: null,
+    winner: null,
+    finishReason: null,
+  })
+
   const replayData: unknown[] = []
 
   for (let round = 1; round <= game.meta.maxRounds; round++) {
@@ -136,6 +180,21 @@ export async function runBattle(battleId: string): Promise<void> {
       [currentAgentId],
     )
 
+    // Update Redis state: it's this agent's turn
+    await setBattleState(battleId, {
+      status: 'active',
+      gameId: battle.gameId,
+      agents: agentIds,
+      round,
+      currentTurnAgentId: currentAgentId,
+      timeoutMs: game.meta.turnTimeoutMs,
+      availableTools: game.tools,
+      gameState: state,
+      lastAction: null,
+      winner: null,
+      finishReason: null,
+    })
+
     const action = await waitForAction(currentAgentId, battleId, game.meta.turnTimeoutMs)
 
     // --- Forfeit ---
@@ -153,6 +212,19 @@ export async function runBattle(battleId: string): Promise<void> {
       await db.update(battles).set({ replayData }).where(eq(battles.id, battleId))
 
       await executeSettlement(battleId, settlement, battle, db)
+      await setBattleState(battleId, {
+        status: 'finished',
+        gameId: battle.gameId,
+        agents: agentIds,
+        round,
+        currentTurnAgentId: null,
+        timeoutMs: 0,
+        availableTools: [],
+        gameState: forfeitState,
+        lastAction: { agentId: currentAgentId, tool: 'forfeit', events: [{ type: 'forfeit' }] },
+        winner: settlement.winner,
+        finishReason: 'forfeit',
+      })
       await publishEvent(
         battleId,
         'battle:finished',
@@ -181,6 +253,19 @@ export async function runBattle(battleId: string): Promise<void> {
         agentId: currentAgentId,
         action,
         result: { events: [{ type: 'timeout' }] },
+      })
+      await setBattleState(battleId, {
+        status: 'active',
+        gameId: battle.gameId,
+        agents: agentIds,
+        round,
+        currentTurnAgentId: currentAgentId,
+        timeoutMs: game.meta.turnTimeoutMs,
+        availableTools: game.tools,
+        gameState: state,
+        lastAction: { agentId: currentAgentId, tool: 'pass', events: [{ type: 'timeout' }] },
+        winner: null,
+        finishReason: null,
       })
       continue
     }
@@ -219,6 +304,19 @@ export async function runBattle(battleId: string): Promise<void> {
     if (result.terminated || game.isTerminal(state)) {
       const settlement = game.settle(state, battle.wager, battle.feeBps ?? 1000)
       await executeSettlement(battleId, settlement, battle, db)
+      await setBattleState(battleId, {
+        status: 'finished',
+        gameId: battle.gameId,
+        agents: agentIds,
+        round,
+        currentTurnAgentId: null,
+        timeoutMs: 0,
+        availableTools: [],
+        gameState: state,
+        lastAction: { agentId: currentAgentId, tool: validated.tool, events: result.events },
+        winner: settlement.winner,
+        finishReason: 'terminal',
+      })
       await publishEvent(
         battleId,
         'battle:finished',
@@ -239,6 +337,19 @@ export async function runBattle(battleId: string): Promise<void> {
   const settlement = game.settle(state, battle.wager, battle.feeBps ?? 1000)
   await db.update(battles).set({ replayData }).where(eq(battles.id, battleId))
   await executeSettlement(battleId, settlement, battle, db)
+  await setBattleState(battleId, {
+    status: 'finished',
+    gameId: battle.gameId,
+    agents: agentIds,
+    round: game.meta.maxRounds,
+    currentTurnAgentId: null,
+    timeoutMs: 0,
+    availableTools: [],
+    gameState: state,
+    lastAction: null,
+    winner: settlement.winner,
+    finishReason: 'max_rounds',
+  })
   await publishEvent(
     battleId,
     'battle:finished',
