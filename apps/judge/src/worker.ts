@@ -32,7 +32,7 @@ const judgeWorker = new Worker(
     await runBattle(battleId)
     console.log(`[Judge] Battle completed: ${battleId}`)
   },
-  { connection: redis, concurrency: 10 },
+  { connection: redis as any, concurrency: 10 },
 )
 
 judgeWorker.on('failed', (job, err) => {
@@ -83,7 +83,7 @@ async function expireRooms(): Promise<void> {
   }
 }
 
-const expiryQueue = new Queue('room-expiry', { connection: redis })
+const expiryQueue = new Queue('room-expiry', { connection: redis as any })
 await expiryQueue.add('check-expiry', {}, {
   repeat: { every: ROOM_EXPIRY_INTERVAL_MS },
 })
@@ -93,7 +93,7 @@ const expiryWorker = new Worker(
   async () => {
     await expireRooms()
   },
-  { connection: redis },
+  { connection: redis as any },
 )
 
 expiryWorker.on('failed', (_job, err) => {
@@ -116,7 +116,7 @@ const refundWorker = new Worker(
     await refundRoom(roomId, creatorWallet, BigInt(amountUsdc6))
     console.log(`[Judge] Refunded room ${roomId} to ${creatorWallet}`)
   },
-  { connection: redis },
+  { connection: redis as any },
 )
 
 refundWorker.on('failed', (job, err) => {
