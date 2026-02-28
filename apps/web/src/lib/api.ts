@@ -19,5 +19,6 @@ export const api = {
   getAgent: (id: string) => fetchAPI(`/v1/agents/${id}`),
   getAgentBattles: (id: string, params?: string) =>
     fetchAPI(`/v1/agents/${id}/battles${params ? `?${params}` : ''}`),
+  getLiveBattle: (id: string) => fetchAPI(`/v1/battle/${id}/live`),
   getRooms: (params?: string) => fetchAPI(`/v1/rooms${params ? `?${params}` : ''}`),
 }

@@ -1,14 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { AgentAvatar, BattleCard } from '@/components/BattleCard'
 import { GomokuBoard } from '@/components/GomokuBoard'
-
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3000'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,48 +21,9 @@ type MoveEvent = {
   color: number
 }
 
-type TurnResultPayload = {
-  board?: number[][]
-  replayData?: Array<{ agentId?: string; events?: MoveEvent[] }>
-  currentTurn?: string
-  turnDeadline?: string
-}
-
-type FinishedPayload = {
-  winnerId?: string | null
-  reason?: string
-}
-
-type WsMessage =
-  | { event: 'battle:turn_result'; data: TurnResultPayload }
-  | { event: 'battle:finished'; data: FinishedPayload }
-
-type ObservationState = {
-  board: number[][]
-  lastMove: MoveEvent | null
-  moves: Array<{ agentId: string; event: MoveEvent; index: number }>
-  currentTurn: string | null
-  turnDeadline: string | null
-  finished: boolean
-  winnerId: string | null
-  finishReason: string | null
-}
-
 // ---------------------------------------------------------------------------
 // Board helpers
 // ---------------------------------------------------------------------------
-
-function reconstructBoard(replayData: Array<{ agentId?: string; events?: MoveEvent[] }>): number[][] {
-  const board = createEmptyBoard()
-  for (const entry of replayData) {
-    for (const event of entry.events ?? []) {
-      if ((event.type === 'move' || event.type === 'win') && event.row !== undefined) {
-        board[event.row][event.col] = event.color
-      }
-    }
-  }
-  return board
-}
 
 function createEmptyBoard(): number[][] {
   return Array.from({ length: 15 }, () => new Array(15).fill(0))
@@ -101,94 +60,6 @@ function mapRoomToBattle(room: any): any {
     wager: room.wager ?? '0',
     startedAt: room.createdAt ?? new Date().toISOString(),
   }
-}
-
-// ---------------------------------------------------------------------------
-// WebSocket hook for live observation
-// ---------------------------------------------------------------------------
-
-function useObserveWebSocket(battleId: string | null): ObservationState | null {
-  const [state, setState] = useState<ObservationState | null>(null)
-  const wsRef = useRef<WebSocket | null>(null)
-  const battleIdRef = useRef(battleId)
-
-  const handleMessage = useCallback((raw: MessageEvent) => {
-    let msg: WsMessage
-    try {
-      msg = JSON.parse(raw.data) as WsMessage
-    } catch {
-      return
-    }
-
-    if (msg.event === 'battle:turn_result') {
-      const { board, replayData, currentTurn, turnDeadline } = msg.data
-
-      setState((prev) => {
-        const base = prev ?? {
-          board: createEmptyBoard(),
-          lastMove: null,
-          moves: [],
-          currentTurn: null,
-          turnDeadline: null,
-          finished: false,
-          winnerId: null,
-          finishReason: null,
-        }
-
-        const nextBoard = board ?? (replayData ? reconstructBoard(replayData) : base.board)
-        const nextMoves = replayData ? extractMoves(replayData) : base.moves
-        const lastMove = nextMoves.at(-1)?.event ?? base.lastMove
-
-        return {
-          ...base,
-          board: nextBoard,
-          lastMove,
-          moves: nextMoves,
-          currentTurn: currentTurn ?? base.currentTurn,
-          turnDeadline: turnDeadline ?? base.turnDeadline,
-        }
-      })
-    }
-
-    if (msg.event === 'battle:finished') {
-      setState((prev) =>
-        prev
-          ? {
-              ...prev,
-              finished: true,
-              winnerId: msg.data.winnerId ?? null,
-              finishReason: msg.data.reason ?? null,
-            }
-          : prev,
-      )
-    }
-  }, [])
-
-  useEffect(() => {
-    battleIdRef.current = battleId
-
-    if (wsRef.current) {
-      wsRef.current.close()
-      wsRef.current = null
-    }
-
-    if (!battleId) {
-      setState(null)
-      return
-    }
-
-    const ws = new WebSocket(`${WS_URL}/v1/ws/observe?battle_id=${battleId}`)
-    wsRef.current = ws
-    ws.addEventListener('message', handleMessage)
-
-    return () => {
-      ws.removeEventListener('message', handleMessage)
-      ws.close()
-      wsRef.current = null
-    }
-  }, [battleId, handleMessage])
-
-  return state
 }
 
 // ---------------------------------------------------------------------------
@@ -412,7 +283,14 @@ type ObservationPanelProps = {
 
 function ObservationPanel({ battleId, battleDetail }: ObservationPanelProps): JSX.Element {
   const t = useTranslations('arena')
-  const wsState = useObserveWebSocket(battleId && battleDetail?.status === 'active' ? battleId : null)
+
+  // Live state polling (1s) — only for active battles
+  const isActive = battleDetail?.status === 'active'
+  const { data: liveState } = useSWR(
+    battleId && isActive ? `/battle/${battleId}/live` : null,
+    () => api.getLiveBattle(battleId!),
+    { refreshInterval: 1000 },
+  )
 
   if (!battleId || !battleDetail) {
     return (
@@ -420,20 +298,28 @@ function ObservationPanel({ battleId, battleDetail }: ObservationPanelProps): JS
     )
   }
 
-  // Merge WS state with polling data: prefer WS when available
+  // Board: prefer live gameState.board (Redis, real-time), fallback to DB replayData
+  const liveBoard: number[][] | undefined = liveState?.gameState?.board
   const replay = battleDetail.replayData ?? []
-  const pollingBoard = replay.length > 0 ? reconstructBoard(replay) : createEmptyBoard()
-  const pollingMoves = replay.length > 0 ? extractMoves(replay) : []
-  const pollingLastMove = pollingMoves.at(-1)?.event ?? null
+  const replayMoves = extractMoves(replay)
 
-  const board = wsState?.board ?? pollingBoard
-  const lastMove = wsState?.lastMove ?? pollingLastMove
-  const moves = wsState?.moves ?? pollingMoves
-  const currentTurn = wsState?.currentTurn ?? null
-  const turnDeadline = wsState?.turnDeadline ?? null
-  const isFinished = wsState?.finished || battleDetail.status === 'finished'
-  const winnerId = wsState?.winnerId ?? battleDetail.winnerId ?? null
+  const board = liveBoard ?? (replayMoves.length > 0 ? buildBoardFromMoves(replayMoves) : createEmptyBoard())
+  const lastMove: MoveEvent | null = liveState?.gameState?.lastMove ?? replayMoves.at(-1)?.event ?? null
+  const moves = replayMoves
 
+  // Turn info from live state
+  const currentTurnAgentId = liveState?.currentTurnAgentId ?? null
+  const turnDeadline = liveState?.updatedAt && liveState?.timeoutMs
+    ? new Date(new Date(liveState.updatedAt).getTime() + liveState.timeoutMs).toISOString()
+    : null
+
+  // Status
+  const isFinished = liveState?.status === 'finished' || battleDetail.status === 'finished'
+  const winnerId = liveState?.winner ?? battleDetail.winnerId ?? null
+  const finishReason = liveState?.finishReason ?? null
+  const isLive = isActive && !isFinished
+
+  // Agent info
   const agentA = battleDetail.agentAName ?? battleDetail.agentA ?? 'Agent A'
   const agentB = battleDetail.agentBName ?? battleDetail.agentB ?? 'Agent B'
   const idA = battleDetail.agentA ?? ''
@@ -441,7 +327,6 @@ function ObservationPanel({ battleId, battleDetail }: ObservationPanelProps): JS
   const agentNames: Record<string, string> = { [idA]: agentA, [idB]: agentB }
   const eloA = battleDetail.agentARating ?? battleDetail.eloA ?? null
   const eloB = battleDetail.agentBRating ?? battleDetail.eloB ?? null
-  const isLive = battleDetail.status === 'active' && !isFinished
 
   return (
     <>
@@ -452,22 +337,31 @@ function ObservationPanel({ battleId, battleDetail }: ObservationPanelProps): JS
       <AgentMatchupBar
         agentA={agentA}
         agentB={agentB}
+        idA={idA}
+        idB={idB}
         eloA={eloA}
         eloB={eloB}
         winnerId={winnerId}
-        currentTurn={currentTurn}
+        currentTurnId={currentTurnAgentId}
       />
 
       {/* Turn timer */}
       {isLive && turnDeadline && (
-        <TurnTimerBar deadline={turnDeadline} currentTurn={currentTurn} agentA={agentA} agentB={agentB} />
+        <TurnTimerBar
+          deadline={turnDeadline}
+          currentTurnId={currentTurnAgentId}
+          idA={idA}
+          idB={idB}
+          agentA={agentA}
+          agentB={agentB}
+        />
       )}
 
       {/* Board */}
       <GomokuBoard board={board} lastMove={lastMove} size={340} />
 
       {/* Finished banner */}
-      {isFinished && <FinishedBanner winnerId={winnerId} reason={wsState?.finishReason ?? null} agentNames={agentNames} />}
+      {isFinished && <FinishedBanner winnerId={winnerId} reason={finishReason} agentNames={agentNames} />}
 
       {/* Watch Replay button */}
       {isFinished && (
@@ -486,10 +380,23 @@ function ObservationPanel({ battleId, battleDetail }: ObservationPanelProps): JS
       <div className="mt-4 space-y-2">
         <MetaRow label={t('metaStatus')} value={isFinished ? 'finished' : battleDetail.status} />
         {battleDetail.gameId && <MetaRow label={t('metaGame')} value={battleDetail.gameId} />}
-        <MetaRow label={t('metaMoves')} value={String(moves.length)} />
+        <MetaRow label={t('metaMoves')} value={String(liveState?.round ?? moves.length)} />
       </div>
     </>
   )
+}
+
+function buildBoardFromMoves(
+  moves: Array<{ event: MoveEvent }>,
+): number[][] {
+  const board = createEmptyBoard()
+  for (const m of moves) {
+    const e = m.event
+    if ((e.type === 'move' || e.type === 'win') && e.row !== undefined) {
+      board[e.row][e.col] = e.color
+    }
+  }
+  return board
 }
 
 // ---------------------------------------------------------------------------
@@ -526,36 +433,37 @@ function StatusHeader({
 function AgentMatchupBar({
   agentA,
   agentB,
+  idA,
+  idB,
   eloA,
   eloB,
   winnerId,
-  currentTurn,
+  currentTurnId,
 }: {
   agentA: string
   agentB: string
+  idA: string
+  idB: string
   eloA: number | null
   eloB: number | null
   winnerId: string | null
-  currentTurn: string | null
+  currentTurnId: string | null
 }): JSX.Element {
-  const isATurn = currentTurn === agentA
-  const isBTurn = currentTurn === agentB
-
   return (
     <div className="flex items-center justify-between mb-4">
       <AgentTag
         name={agentA}
         elo={eloA}
-        isWinner={winnerId === agentA}
-        isTurn={isATurn}
+        isWinner={winnerId === idA}
+        isTurn={currentTurnId === idA}
         stone="black"
       />
       <span className="text-text-3 font-display text-xs">VS</span>
       <AgentTag
         name={agentB}
         elo={eloB}
-        isWinner={winnerId === agentB}
-        isTurn={isBTurn}
+        isWinner={winnerId === idB}
+        isTurn={currentTurnId === idB}
         stone="white"
         align="right"
       />
@@ -612,12 +520,16 @@ function AgentTag({
 
 function TurnTimerBar({
   deadline,
-  currentTurn,
+  currentTurnId,
+  idA,
+  idB,
   agentA,
   agentB,
 }: {
   deadline: string
-  currentTurn: string | null
+  currentTurnId: string | null
+  idA: string
+  idB: string
   agentA: string
   agentB: string
 }): JSX.Element {
@@ -633,9 +545,9 @@ function TurnTimerBar({
     barColor = 'bg-gold'
   }
 
-  let turnLabel = currentTurn ?? 'Unknown'
-  if (currentTurn === agentA) turnLabel = agentA
-  else if (currentTurn === agentB) turnLabel = agentB
+  let turnLabel = 'Unknown'
+  if (currentTurnId === idA) turnLabel = agentA
+  else if (currentTurnId === idB) turnLabel = agentB
 
   return (
     <div className="mb-3">

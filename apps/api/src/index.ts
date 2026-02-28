@@ -1,7 +1,6 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { WebSocketServer } from 'ws'
 
 import { paymentMiddlewareFromConfig } from '@x402/hono'
 import { ExactEvmScheme } from '@x402/evm/exact/server'
@@ -15,7 +14,6 @@ import { agentRoutes } from './routes/agents.js'
 import { battleRoutes } from './routes/battles.js'
 import { roomRoutes } from './routes/rooms.js'
 import { statsRoutes } from './routes/stats.js'
-import { setupWebSocket } from './ws/handler.js'
 
 const REQUIRE_PAYMENT = process.env.REQUIRE_PAYMENT !== 'false'
 const ESCROW_ADDRESS = process.env.ESCROW_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000'
@@ -81,8 +79,5 @@ app.route('/v1', statsRoutes)
 
 const port = Number(process.env.PORT || 3000)
 const server = serve({ fetch: app.fetch, port })
-
-const wss = new WebSocketServer({ server: server as any })
-setupWebSocket(wss)
 
 console.log(`Bout API running on http://localhost:${port}`)

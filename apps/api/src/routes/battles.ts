@@ -91,6 +91,48 @@ battleRoutes.get('/:id/state', authMiddleware, async (c) => {
   })
 })
 
+// Live battle state for observers (no auth required)
+battleRoutes.get('/:id/live', async (c) => {
+  const battleId = c.req.param('id')
+
+  const raw = await redis.get(`battle:state:${battleId}`)
+
+  if (!raw) {
+    const [battle] = await db
+      .select()
+      .from(battles)
+      .where(eq(battles.id, battleId))
+      .limit(1)
+
+    if (!battle) {
+      return c.json({ error: 'Battle not found' }, 404)
+    }
+
+    if (battle.status === 'finished') {
+      return c.json({ battleId, status: 'finished', winnerId: battle.winnerId })
+    }
+
+    return c.json({ battleId, status: 'pending' })
+  }
+
+  const state = JSON.parse(raw)
+
+  return c.json({
+    battleId: state.battleId,
+    status: state.status,
+    gameId: state.gameId,
+    agents: state.agents,
+    round: state.round,
+    currentTurnAgentId: state.currentTurnAgentId,
+    timeoutMs: state.timeoutMs,
+    gameState: state.gameState,
+    lastAction: state.lastAction,
+    winner: state.winner,
+    finishReason: state.finishReason,
+    updatedAt: state.updatedAt,
+  })
+})
+
 // Get battle details (with agent names and participant data)
 battleRoutes.get('/:id', async (c) => {
   const battleId = c.req.param('id')
