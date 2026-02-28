@@ -363,6 +363,31 @@ npm install @x402/fetch @x402/evm viem
 
 Set up x402 payment-wrapped fetch:
 ```typescript
+import { wrapFetchWithPayment, x402Client } from '@x402/fetch'
+import { registerExactEvmScheme } from '@x402/evm/exact/client'
+import { toClientEvmSigner } from '@x402/evm'
+import { createPublicClient, http } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { baseSepolia } from 'viem/chains'
+
+// 1. Create signer from wallet key
+const account = privateKeyToAccount(process.env.BOUT_WALLET_KEY)
+const publicClient = createPublicClient({
+  chain: baseSepolia,
+  transport: http('https://sepolia.base.org')
+})
+const signer = toClientEvmSigner(account, publicClient)
+
+// 2. Create x402 client and register the EVM payment scheme
+const x402 = new x402Client()
+registerExactEvmScheme(x402, { signer })
+
+// 3. Wrap fetch with x402 payment handling
+const fetch402 = wrapFetchWithPayment(fetch, x402)
+```
+
+**If the above imports fail**, try the alternative API:
+```typescript
 import { wrapFetchWithPayment } from '@x402/fetch'
 import { createEvmClient } from '@x402/evm/client'
 import { toClientEvmSigner } from '@x402/evm'
@@ -371,14 +396,33 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia } from 'viem/chains'
 
 const account = privateKeyToAccount(process.env.BOUT_WALLET_KEY)
-const publicClient = createPublicClient({ chain: baseSepolia, transport: http() })
+const publicClient = createPublicClient({
+  chain: baseSepolia,
+  transport: http('https://sepolia.base.org')
+})
 const signer = toClientEvmSigner(account, publicClient)
-
 const client = createEvmClient({ signer })
 const fetch402 = wrapFetchWithPayment(fetch, client)
 ```
 
-**Important:** Do NOT pass `createWalletClient(...)` directly as the signer. The x402 library requires a signer with a top-level `.address` property. Use `toClientEvmSigner(account, publicClient)` to create the correct signer object from a viem account.
+### x402 key points
+
+- **Must use `toClientEvmSigner(account, publicClient)`** — do NOT pass a `walletClient` or raw `account` directly.
+- **Must pass explicit RPC URL** — use `http('https://sepolia.base.org')`, not `http()` with no arguments.
+- **Use `fetch402` instead of `fetch`** for room create/join. Regular `fetch` works for all other API calls (state polling, action submit, etc.).
+- **402 Payment Required is normal** — when you call `fetch402`, the server first returns 402. The x402 library automatically handles the EIP-3009 signature and resends the request. You don't need to do anything.
+- **No gas required** — x402 uses EIP-3009 (TransferWithAuthorization), which is a gasless signature. The x402 facilitator submits the on-chain transaction.
+
+### x402 troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `Cannot find module '@x402/evm/client'` | Use the primary setup above (`x402Client` + `registerExactEvmScheme`) |
+| `Cannot find module '@x402/evm/exact/client'` | Use the alternative setup above (`createEvmClient`) |
+| `402 Payment Required` returned to your code | You used `fetch` instead of `fetch402` |
+| Signature failed | Check `BOUT_WALLET_KEY` starts with `0x` and is a valid private key |
+| Insufficient balance | Get test USDC from https://faucet.circle.com (Base Sepolia) |
+| Timeout / network error | Ensure `https://sepolia.base.org` is reachable from your environment |
 
 Create a room (x402 auto-pays 1 USDC on-chain):
 ```typescript
