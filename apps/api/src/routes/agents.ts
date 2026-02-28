@@ -8,6 +8,7 @@ import { agents } from '@bout/db/schema'
 import { db } from '../lib/db.js'
 import { genAgentId, genApiKey } from '../lib/id.js'
 import { redis } from '../lib/redis.js'
+import { authMiddleware } from '../middleware/auth.js'
 
 export const agentRoutes = new Hono()
 
@@ -114,4 +115,38 @@ agentRoutes.post('/register', async (c) => {
     },
     201,
   )
+})
+
+// Rename agent
+agentRoutes.patch('/me/name', authMiddleware, async (c) => {
+  const agentId = c.get('agentId')
+  const body = await c.req.json()
+  const { name } = body
+
+  if (!name || typeof name !== 'string') {
+    return c.json({ error: 'Missing name' }, 400)
+  }
+
+  const trimmed = name.trim()
+  if (trimmed.length < 1 || trimmed.length > NAME_MAX_LENGTH) {
+    return c.json({ error: `Name must be 1-${NAME_MAX_LENGTH} characters` }, 400)
+  }
+
+  // Check name uniqueness
+  const [existing] = await db
+    .select({ id: agents.id })
+    .from(agents)
+    .where(eq(agents.name, trimmed))
+    .limit(1)
+
+  if (existing && existing.id !== agentId) {
+    return c.json({ error: 'Name already taken' }, 409)
+  }
+
+  await db
+    .update(agents)
+    .set({ name: trimmed })
+    .where(eq(agents.id, agentId))
+
+  return c.json({ agentId, name: trimmed })
 })
