@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
+import { Poppins, Inter, JetBrains_Mono } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { StatusBar } from '@/components/StatusBar'
 
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' })
+const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-display' })
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
@@ -21,12 +21,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const messages = await getMessages()
 
   return (
-    <html lang={locale} className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen">
+    <html lang={locale} className={`${poppins.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className="relative min-h-screen">
         <NextIntlClientProvider messages={messages}>
           <Navbar />
           <StatusBar />
-          <main>{children}</main>
+          <main className="relative z-[1]">{children}</main>
         </NextIntlClientProvider>
       </body>
     </html>

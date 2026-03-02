@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -17,33 +16,38 @@ export function Navbar() {
   ]
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-text">
-            <Image src="/logo-navbar.svg" alt="" width={28} height={28} />
-            BOUT
-          </Link>
-          <div className="hidden md:flex gap-6">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`text-sm transition-colors ${
-                  pathname === href
-                    ? 'text-text border-b-2 border-accent pb-0.5'
-                    : 'text-text-2 hover:text-text'
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
+    <nav className="sticky top-0 z-50 bg-bg/60 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-[960px] items-center justify-between px-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 font-display text-lg font-bold text-text">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-purple-dark font-display text-sm font-bold text-white">
+            B
           </div>
+          BOUT
+        </Link>
+
+        {/* Desktop pill nav */}
+        <div className="hidden md:flex items-center rounded-pill bg-surface-2 p-1">
+          {NAV_LINKS.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`rounded-pill px-4 py-1.5 text-sm font-medium transition-colors ${
+                pathname === href
+                  ? 'bg-elevated text-text'
+                  : 'text-text-2 hover:bg-elevated hover:text-text'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
-        <div className="hidden md:flex items-center gap-4">
+
+        {/* Desktop CTA + lang */}
+        <div className="hidden md:flex items-center gap-3">
           <Link
             href="/build"
-            className="rounded border border-accent px-3 py-1 text-xs font-display text-accent hover:bg-accent hover:text-white transition-colors"
+            className="rounded-pill bg-accent px-5 py-1.5 text-sm font-display font-semibold text-white transition-all hover:shadow-[0_0_20px_rgba(123,97,255,0.4)]"
           >
             {t('buildGames')}
           </Link>
@@ -67,7 +71,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-md px-4 py-4 space-y-3">
+        <div className="md:hidden bg-surface/95 backdrop-blur-xl px-4 py-4 space-y-3 border-t border-border">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}

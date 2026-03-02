@@ -15,7 +15,7 @@ type Battle = {
   replayData?: any[]
 }
 
-const AVATAR_COLORS = ['#3D6EFF', '#00D4A8', '#FFB800', '#FF4444', '#9B59B6', '#E67E22']
+const AVATAR_COLORS = ['#7B61FF', '#37D56D', '#FA825D', '#FFD700', '#4A9EFF', '#E44AFF']
 
 function AgentAvatar({ name, size = 32 }: { name: string; size?: number }) {
   const hash = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
@@ -36,21 +36,29 @@ function StatusBadge({ status }: { status: string }) {
   const t = useTranslations('common.battleCard')
   if (status === 'active') {
     return (
-      <span className="flex items-center gap-1 text-xs text-accent-2">
-        <span className="w-2 h-2 rounded-full bg-accent-2 animate-pulse" />
+      <span className="inline-flex items-center gap-1.5 rounded-pill bg-[rgba(250,130,93,0.12)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-orange">
+        <span className="w-1.5 h-1.5 rounded-full bg-orange animate-pulse" />
         {t('live')}
       </span>
     )
   }
   if (status === 'finished') {
-    return <span className="text-xs text-text-3">{t('finished')}</span>
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-pill bg-[rgba(55,213,109,0.12)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-accent-2">
+        {t('finished')}
+      </span>
+    )
   }
-  return <span className="text-xs text-gold">{t('waiting')}</span>
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-pill bg-[rgba(255,215,0,0.12)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-gold">
+      {t('waiting')}
+    </span>
+  )
 }
 
 function AgentName({ name, isWinner }: { name: string; isWinner: boolean }) {
   return (
-    <span className={`text-sm font-display truncate ${isWinner ? 'text-accent-2' : 'text-text'}`}>
+    <span className={`text-[13px] font-semibold truncate ${isWinner ? 'text-accent-2' : 'text-text'}`}>
       {name}
     </span>
   )
@@ -72,44 +80,34 @@ function useTimeAgo() {
 export function BattleCard({ battle, disableLink }: { battle: Battle; disableLink?: boolean }) {
   const t = useTranslations('common.battleCard')
   const timeAgo = useTimeAgo()
-  const isLive = battle.status === 'active'
-  const isFinished = battle.status === 'finished'
 
   const nameA = battle.agentAName || battle.agentA
   const nameB = battle.agentBName || battle.agentB
-
-  let borderColor = 'border-l-gold'
-  if (isLive) {
-    borderColor = 'border-l-accent-2'
-  } else if (isFinished) {
-    borderColor = 'border-l-border'
-  }
-
   const rounds = battle.replayData?.length
 
   const card = (
-    <div className={`rounded-lg bg-surface border border-border ${borderColor} border-l-[3px] p-4 hover:-translate-y-0.5 hover:shadow-lg transition-all cursor-pointer`}>
+    <div className="rounded-md bg-surface-2 border border-border p-5 hover:border-[rgba(123,97,255,0.3)] hover:-translate-y-0.5 hover:shadow-lg transition-all cursor-pointer">
+      {/* Meta row */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <StatusBadge status={battle.status} />
-          <span className="text-xs text-text-2 font-mono">{battle.id}</span>
-        </div>
+        <StatusBadge status={battle.status} />
         <span className="text-xs text-text-3 capitalize">{battle.gameId}</span>
       </div>
 
+      {/* Players row */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <AgentAvatar name={nameA} size={28} />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <AgentAvatar name={nameA} size={32} />
           <AgentName name={nameA} isWinner={battle.winnerId === battle.agentA} />
         </div>
         <span className="text-xs text-text-3 font-display px-3 shrink-0">{t('vs')}</span>
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <AgentName name={nameB} isWinner={battle.winnerId === battle.agentB} />
-          <AgentAvatar name={nameB} size={28} />
+          <AgentAvatar name={nameB} size={32} />
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-xs text-text-2">
+      {/* Footer row */}
+      <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs text-text-3">
         <span>{t('usdcEach', { amount: Number(battle.wager) / 1000 })}</span>
         <div className="flex items-center gap-2">
           {rounds !== undefined && <span>{t('rounds', { count: rounds })}</span>}
