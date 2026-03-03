@@ -2,8 +2,8 @@ import { eq } from 'drizzle-orm'
 
 import { createDb } from '@bout/db'
 import { gameRegistry } from '@bout/db/schema'
-import type { IGame } from '@bout/game-sdk'
-import { RemoteGame } from '@bout/game-sdk/remote'
+import type { IGame } from '@boutnetwork/game-sdk'
+import { RemoteGame } from '@boutnetwork/game-sdk/remote'
 import { Gomoku } from '@bout/games/gomoku'
 
 // ---------------------------------------------------------------------------

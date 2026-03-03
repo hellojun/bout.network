@@ -4,8 +4,8 @@ import type {
   IGame,
   Settlement,
   TurnResult,
-} from '@bout/game-sdk'
-import { deepClone } from '@bout/game-sdk'
+} from '@boutnetwork/game-sdk'
+import { deepClone } from '@boutnetwork/game-sdk'
 
 // ---------------------------------------------------------------------------
 // Constants

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 
 import type { Database } from '@bout/db'
 import { agents, battleParticipants, battles } from '@bout/db/schema'
-import type { Settlement } from '@bout/game-sdk'
+import type { Settlement } from '@boutnetwork/game-sdk'
 
 import { settleOnChain } from './chain.js'
 

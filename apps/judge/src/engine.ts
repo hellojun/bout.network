@@ -3,7 +3,7 @@ import Redis from 'ioredis'
 
 import { createDb } from '@bout/db'
 import { agents, battles } from '@bout/db/schema'
-import type { Action, GameState } from '@bout/game-sdk'
+import type { Action, GameState } from '@boutnetwork/game-sdk'
 
 import { recordDeposit } from './chain.js'
 import { loadGame } from './loader.js'

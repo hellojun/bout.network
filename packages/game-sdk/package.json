@@ -1,12 +1,25 @@
 {
-  "name": "@bout/game-sdk",
+  "name": "@boutnetwork/game-sdk",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
+  "files": ["dist", "src"],
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./remote": "./src/remote.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./remote": {
+      "types": "./dist/remote.d.ts",
+      "default": "./dist/remote.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "hono": "^4.0.0",

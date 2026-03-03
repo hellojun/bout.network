@@ -1,4 +1,4 @@
-import type { IGame } from '@bout/game-sdk'
+import type { IGame } from '@boutnetwork/game-sdk'
 
 import { Gomoku } from './gomoku/src/index.js'
 
