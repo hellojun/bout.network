@@ -2,7 +2,7 @@ import { Queue } from 'bullmq'
 import { and, desc, eq, or } from 'drizzle-orm'
 import { Hono } from 'hono'
 
-import { agents, battleParticipants, battles, rooms } from '@bout/db/schema'
+import { agents, battleParticipants, battles, gameRegistry, rooms } from '@bout/db/schema'
 
 import { db } from '../lib/db.js'
 import { genBattleId, genParticipantId, genRoomId } from '../lib/id.js'
@@ -87,6 +87,20 @@ roomRoutes.post('/', authMiddleware, async (c) => {
 
   if (!gameId) {
     return c.json({ error: 'Missing gameId' }, 400)
+  }
+
+  // Validate gameId exists and is active (built-in games like "gomoku" or registered external games)
+  const builtinGameIds = ['gomoku']
+  if (!builtinGameIds.includes(gameId)) {
+    const [registeredGame] = await db
+      .select({ id: gameRegistry.id })
+      .from(gameRegistry)
+      .where(and(eq(gameRegistry.id, gameId), eq(gameRegistry.status, 'active')))
+      .limit(1)
+
+    if (!registeredGame) {
+      return c.json({ error: `Unknown or inactive game: ${gameId}` }, 400)
+    }
   }
 
   // Check: agent must not have an open room or active battle

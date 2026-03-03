@@ -55,13 +55,19 @@ export type GameMeta = {
 /** Generic game state -- each game defines its own shape. */
 export type GameState = Record<string, unknown>
 
+/** Helper: a value that may be sync or async. */
+type MaybePromise<T> = T | Promise<T>
+
 /** The core interface all games must implement. */
 export interface IGame {
   meta: GameMeta
   tools: ToolDef[]
 
-  initialState(agents: string[], wager: bigint): GameState
-  applyAction(state: GameState, agentId: string, action: Action): TurnResult
-  isTerminal(state: GameState): boolean
-  settle(state: GameState, wager: bigint, feeBps: number): Settlement
+  initialState(agents: string[], wager: bigint): MaybePromise<GameState>
+  currentAgent(state: GameState): MaybePromise<string>
+  getAgentView(state: GameState, agentId: string): MaybePromise<GameState>
+  applyAction(state: GameState, agentId: string, action: Action): MaybePromise<TurnResult>
+  isTerminal(state: GameState): MaybePromise<boolean>
+  settle(state: GameState, wager: bigint, feeBps: number): MaybePromise<Settlement>
+  forfeit?(state: GameState, agentId: string): MaybePromise<GameState>
 }

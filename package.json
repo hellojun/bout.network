@@ -11,7 +11,8 @@
     "dev:web": "pnpm --filter @bout/web dev",
     "db:generate": "pnpm --filter @bout/db generate",
     "db:migrate": "pnpm --filter @bout/db migrate",
-    "db:push": "pnpm --filter @bout/db push"
+    "db:push": "pnpm --filter @bout/db push",
+    "test:e2e": "pnpm --filter @bout/api exec tsx ../../scripts/test-e2e.ts"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

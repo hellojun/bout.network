@@ -64,6 +64,23 @@ async function setBattleState(
 }
 
 // ---------------------------------------------------------------------------
+// Per-agent views in Redis
+// ---------------------------------------------------------------------------
+
+async function setAgentViews(
+  battleId: string,
+  state: GameState,
+  agentIds: string[],
+  game: { getAgentView(s: GameState, a: string): GameState | Promise<GameState> },
+): Promise<void> {
+  for (const agentId of agentIds) {
+    const view = await game.getAgentView(state, agentId)
+    const key = `battle:view:${battleId}:${agentId}`
+    await redis.set(key, JSON.stringify(view), 'EX', 3600)
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Action helpers
 // ---------------------------------------------------------------------------
 
@@ -108,10 +125,10 @@ export async function runBattle(battleId: string): Promise<void> {
   const [battle] = await db.select().from(battles).where(eq(battles.id, battleId))
   if (!battle) throw new Error(`Battle not found: ${battleId}`)
 
-  const game = loadGame(battle.gameId)
+  const game = await loadGame(battle.gameId)
   const agentIds = [battle.agentA, battle.agentB]
 
-  let state = game.initialState(agentIds, battle.wager)
+  let state = await game.initialState(agentIds, battle.wager)
 
   await publishEvent(
     battleId,
@@ -142,12 +159,13 @@ export async function runBattle(battleId: string): Promise<void> {
   }
 
   // Write initial battle state to Redis for HTTP polling
+  const initialAgent = await game.currentAgent(state)
   await setBattleState(battleId, {
     status: 'active',
     gameId: battle.gameId,
     agents: agentIds,
     round: 0,
-    currentTurnAgentId: agentIds[0],
+    currentTurnAgentId: initialAgent,
     timeoutMs: game.meta.turnTimeoutMs,
     availableTools: game.tools,
     gameState: state,
@@ -155,13 +173,15 @@ export async function runBattle(battleId: string): Promise<void> {
     winner: null,
     finishReason: null,
   })
+  await setAgentViews(battleId, state, agentIds, game)
 
   const replayData: unknown[] = []
 
   for (let round = 1; round <= game.meta.maxRounds; round++) {
-    const currentState = state as Record<string, unknown>
-    const currentAgentIndex = currentState.currentColor === 1 ? 0 : 1
-    const currentAgentId = agentIds[currentAgentIndex]
+    const currentAgentId = await game.currentAgent(state)
+
+    // Build per-agent view for the current player
+    const agentView = await game.getAgentView(state, currentAgentId)
 
     // Notify current player it is their turn
     await publishEvent(
@@ -171,11 +191,7 @@ export async function runBattle(battleId: string): Promise<void> {
         round,
         timeoutMs: game.meta.turnTimeoutMs,
         availableTools: game.tools,
-        gameState: {
-          ...currentState,
-          myColor: currentState.currentColor,
-          opponentColor: currentState.currentColor === 1 ? 2 : 1,
-        },
+        gameState: agentView,
       },
       [currentAgentId],
     )
@@ -199,9 +215,56 @@ export async function runBattle(battleId: string): Promise<void> {
 
     // --- Forfeit ---
     if (action.tool === 'forfeit') {
-      const winnerColor = currentState.currentColor === 1 ? 2 : 1
-      const forfeitState = { ...currentState, winner: winnerColor } as GameState
-      const settlement = game.settle(forfeitState, battle.wager, battle.feeBps ?? 1000)
+      let forfeitState: GameState
+      if (game.forfeit) {
+        forfeitState = await game.forfeit(state, currentAgentId)
+      } else {
+        // Engine-level default: opponent wins, construct settlement directly
+        const opponentId = agentIds[0] === currentAgentId ? agentIds[1] : agentIds[0]
+        const totalPot = battle.wager * 2n
+        const feeBps = battle.feeBps ?? 1000
+        const fee = totalPot * BigInt(feeBps) / 10000n
+        const prize = totalPot - fee
+
+        const settlement = {
+          winner: opponentId,
+          amounts: { [opponentId]: prize, [currentAgentId]: 0n },
+          protocolFee: fee,
+          builderFee: 0n,
+        }
+
+        replayData.push({
+          round,
+          agentId: currentAgentId,
+          action,
+          result: { events: [{ type: 'forfeit' }] },
+        })
+        await db.update(battles).set({ replayData }).where(eq(battles.id, battleId))
+
+        await executeSettlement(battleId, settlement, battle, db)
+        await setBattleState(battleId, {
+          status: 'finished',
+          gameId: battle.gameId,
+          agents: agentIds,
+          round,
+          currentTurnAgentId: null,
+          timeoutMs: 0,
+          availableTools: [],
+          gameState: state,
+          lastAction: { agentId: currentAgentId, tool: 'forfeit', events: [{ type: 'forfeit' }] },
+          winner: settlement.winner,
+          finishReason: 'forfeit',
+        })
+        await publishEvent(
+          battleId,
+          'battle:finished',
+          { winner: settlement.winner, reason: 'forfeit' },
+          agentIds,
+        )
+        return
+      }
+
+      const settlement = await game.settle(forfeitState, battle.wager, battle.feeBps ?? 1000)
 
       replayData.push({
         round,
@@ -272,7 +335,7 @@ export async function runBattle(battleId: string): Promise<void> {
 
     // --- Normal action ---
     const validated = validateAction(action, game.tools)
-    const result = game.applyAction(state, currentAgentId, validated)
+    const result = await game.applyAction(state, currentAgentId, validated)
     state = result.newState
 
     replayData.push({
@@ -300,9 +363,13 @@ export async function runBattle(battleId: string): Promise<void> {
       agentIds,
     )
 
+    // Update per-agent views
+    await setAgentViews(battleId, state, agentIds, game)
+
     // Check if game ended
-    if (result.terminated || game.isTerminal(state)) {
-      const settlement = game.settle(state, battle.wager, battle.feeBps ?? 1000)
+    const terminated = result.terminated || await game.isTerminal(state)
+    if (terminated) {
+      const settlement = await game.settle(state, battle.wager, battle.feeBps ?? 1000)
       await executeSettlement(battleId, settlement, battle, db)
       await setBattleState(battleId, {
         status: 'finished',
@@ -334,7 +401,7 @@ export async function runBattle(battleId: string): Promise<void> {
   }
 
   // Max rounds reached -- settle based on current state
-  const settlement = game.settle(state, battle.wager, battle.feeBps ?? 1000)
+  const settlement = await game.settle(state, battle.wager, battle.feeBps ?? 1000)
   await db.update(battles).set({ replayData }).where(eq(battles.id, battleId))
   await executeSettlement(battleId, settlement, battle, db)
   await setBattleState(battleId, {

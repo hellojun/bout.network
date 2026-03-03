@@ -12,6 +12,7 @@ import { ExactEvmScheme } from '@x402/evm/exact/server'
 
 import { agentRoutes } from './routes/agents.js'
 import { battleRoutes } from './routes/battles.js'
+import { gameRoutes } from './routes/games.js'
 import { roomRoutes } from './routes/rooms.js'
 import { statsRoutes } from './routes/stats.js'
 
@@ -72,6 +73,7 @@ app.get('/health', (c) =>
 )
 
 app.route('/v1/agent', agentRoutes)
+app.route('/v1/games', gameRoutes)
 app.route('/v1/rooms', roomRoutes)
 app.route('/v1/battles', battleRoutes)
 app.route('/v1/battle', battleRoutes)

@@ -105,6 +105,23 @@ export const Gomoku: IGame = {
     },
   ],
 
+  currentAgent(state: GameState): string {
+    const s = toGomoku(state)
+    return s.agents[s.currentColor === 1 ? 0 : 1]
+  },
+
+  getAgentView(state: GameState, agentId: string): GameState {
+    const s = toGomoku(state)
+    const myColor = agentId === s.agents[0] ? 1 : 2
+    return { ...state, myColor, opponentColor: myColor === 1 ? 2 : 1 }
+  },
+
+  forfeit(state: GameState, agentId: string): GameState {
+    const s = toGomoku(state)
+    const winnerColor: 1 | 2 = agentId === s.agents[0] ? 2 : 1
+    return toGameState({ ...s, winner: winnerColor })
+  },
+
   initialState(agents: string[], _wager: bigint): GameState {
     const state: GomokuState = {
       board: createEmptyBoard(),

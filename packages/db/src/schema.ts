@@ -73,6 +73,22 @@ export const battles = pgTable('battles', {
 })
 
 // ---------------------------------------------------------------------------
+// Game Registry
+// ---------------------------------------------------------------------------
+
+export const gameRegistry = pgTable('game_registry', {
+  id: varchar('id', { length: 32 }).primaryKey(),
+  name: varchar('name', { length: 64 }).notNull(),
+  serverUrl: varchar('server_url', { length: 256 }),
+  version: varchar('version', { length: 16 }).notNull(),
+  status: varchar('status', { length: 16 }).default('active'),
+  builderAddress: varchar('builder_address', { length: 42 }),
+  isBuiltin: integer('is_builtin').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
 // Battle Participants
 // ---------------------------------------------------------------------------
 
