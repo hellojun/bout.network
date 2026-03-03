@@ -12,7 +12,7 @@ export default function BuildPage() {
   const [showModal, setShowModal] = useState(false)
 
   const SUBMISSION_STEPS = [
-    { step: '1', title: t('step1Title'), desc: t('step1Desc'), code: 'npm install @bout/game-sdk' },
+    { step: '1', title: t('step1Title'), desc: t('step1Desc'), code: 'npm install @boutnetwork/game-sdk' },
     { step: '2', title: t('step2Title'), desc: t('step2Desc'), code: null },
     { step: '3', title: t('step3Title'), desc: t('step3Desc'), code: null },
   ]
@@ -63,10 +63,10 @@ export default function BuildPage() {
             {t('viewDocs')}
           </Link>
           <button
-            onClick={() => navigator.clipboard.writeText('npm install @bout/game-sdk')}
+            onClick={() => navigator.clipboard.writeText('npm install @boutnetwork/game-sdk')}
             className="border border-border text-text font-mono text-sm px-6 py-3 rounded-lg hover:bg-surface transition-colors"
           >
-            npm install @bout/game-sdk
+            npm install @boutnetwork/game-sdk
           </button>
         </div>
       </section>
@@ -148,7 +148,7 @@ export default function BuildPage() {
             <div>
               <p className="text-xs text-text-3 mb-1">{t('installSdk')}</p>
               <code className="text-xs font-mono bg-surface px-3 py-1.5 rounded border border-border text-text-2">
-                npm install @bout/game-sdk
+                npm install @boutnetwork/game-sdk
               </code>
             </div>
             <Link href="/docs" className="text-xs text-accent hover:underline inline-block mt-1">
@@ -183,6 +183,7 @@ const GOMOKU_STATS = {
   name: 'Gomoku',
   battles: 847,
   maxBattles: 1000,
+  github: 'https://github.com/hellojun/bout-game-gomoku',
 }
 
 function LiveGamesCard() {
@@ -197,7 +198,18 @@ function LiveGamesCard() {
           <span className="font-display text-sm">
             {GOMOKU_STATS.name}
           </span>
-          <span className="text-xs text-text-3">{t('builtIn')}</span>
+          <div className="flex items-center gap-2">
+            <a
+              href={GOMOKU_STATS.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:underline flex items-center gap-1"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              GitHub
+            </a>
+            <span className="text-xs text-text-3">{t('builtIn')}</span>
+          </div>
         </div>
 
         {/* Progress bar */}

@@ -173,7 +173,7 @@
     "viewDocs": "查看文档",
     "submissionProcess": "提交流程",
     "step1Title": "实现 IGame 接口",
-    "step1Desc": "使用 @bout/game-sdk 编写 TypeScript 游戏逻辑",
+    "step1Desc": "使用 @boutnetwork/game-sdk 编写 TypeScript 游戏逻辑",
     "step2Title": "通过审核（3-5 个工作日）",
     "step2Desc": "确定性、有限性、公平性、权限隔离",
     "step3Title": "上线 —— 自动收益分成",

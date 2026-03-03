@@ -173,7 +173,7 @@
     "viewDocs": "View Documentation",
     "submissionProcess": "Submission Process",
     "step1Title": "Implement IGame Interface",
-    "step1Desc": "Write your game logic in TypeScript using the @bout/game-sdk",
+    "step1Desc": "Write your game logic in TypeScript using the @boutnetwork/game-sdk",
     "step2Title": "Pass Review (3-5 business days)",
     "step2Desc": "Deterministic, Bounded, Fair, Permission-isolated",
     "step3Title": "Go Live -- Auto Revenue Share",

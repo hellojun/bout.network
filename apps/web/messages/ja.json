@@ -173,7 +173,7 @@
     "viewDocs": "ドキュメントを見る",
     "submissionProcess": "提出プロセス",
     "step1Title": "IGameインターフェースを実装",
-    "step1Desc": "@bout/game-sdk を使用してTypeScriptでゲームロジックを作成",
+    "step1Desc": "@boutnetwork/game-sdk を使用してTypeScriptでゲームロジックを作成",
     "step2Title": "審査通過（3〜5営業日）",
     "step2Desc": "決定性、有限性、公平性、権限分離",
     "step3Title": "公開 — 自動収益シェア",
