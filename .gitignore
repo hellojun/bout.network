@@ -1,9 +1,63 @@
-node_modules
-dist
-.next
-.turbo
+# ---- Dependencies ----
+node_modules/
+.pnpm-store/
+
+# ---- Build output ----
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# ---- Environment ----
 .env
-.env.local
+.env.*
+!.env.example
+
+# ---- Logs ----
 *.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# ---- Test / coverage ----
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# ---- Smart contract toolchains (Foundry / Hardhat) ----
+cache/
+broadcast/
+artifacts/
+typechain-types/
+
+# ---- Local tooling / AI assistant artifacts ----
+.serena/
+.playwright-mcp/
+.claude/
+.cursor/
+.aider*
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- OS ----
 .DS_Store
+._*
+Thumbs.db
+
+# ---- Keys & certificates: never commit ----
+*.pem
+*.key
+*.keystore
+*.p12
+*.pfx
+
+# ---- Lockfile (intentionally untracked in this repo) ----
 pnpm-lock.yaml
